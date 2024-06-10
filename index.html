@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>G</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Loader styles */
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent white background */
+            display: none; /* Initially hidden */
+            justify-content: center;
+            align-items: center;
+            z-index: 9999; /* Ensure it's above other content */
+        }
+
+        .loader i {
+            font-size: 3em; /* Adjust the size of the spinner */
+            color: #333; /* Color of the spinner */
+            animation: spin 1s infinite linear; /* Animation to spin the spinner */
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Other styles */
+        .header {
+            background-color: #c0c0c0;
+            padding: 10px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+
+        .search-box {
+            position: relative;
+            left: 430px;
+            top: 10px;
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 290px;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 20px;
+            color: gray;
+            cursor: pointer;
+        }
+
+        h1 {
+            font-family: cursive;
+        }
+
+        .product-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-gap: 20px;
+        }
+
+        .product-list-item {
+            padding: 10px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: contain;
+            margin-bottom: 10px;
+            border-radius: 8px;
+        }
+
+        .product-title {
+            margin-top: 10px;
+            font-weight: normal;
+            font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+        }
+
+        .product-price {
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .product-discount {
+            background-color: red;
+            color: white;
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .cart-count {
+            background-color: #c0c0c0;
+            color: white;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 50%;
+            margin-left: 5px;
+        }
+
+        /* Dropdown styles */
+        .dropdown {
+            margin-right: 20px;
+        }
+
+        .dropdown select {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 8px;
+            outline: none;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="loader" id="loader">
+        <i class="fa-solid fa-spinner"></i>
+    </div>
+
+    <header class="header">
+        <div class="search-box">
+            <input id="search-input" class="search-input" type="text" placeholder="Search...">
+            <i id="search-icon" class="fas fa-search search-icon"></i>
+        </div>
+        <div class="dropdown">
+            <label for="sort-by-price">Sort by Price:</label>
+            <select id="sort-by-price" onchange="sortProducts()">
+                <option value="asc">Low to High</option>
+                <option value="desc">High to Low</option>
+            </select>
+        </div>
+        <div class="add-to-cart" onclick="goToCart()">
+            <i class="fas fa-shopping-bag"></i>
+            <span id="cart-count" class="cart-count">0</span>
+        </div>
+    </header>
+
+    <h1></h1>
+    <div class="product-list" id="product-list"></div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        
+        function showLoader() {
+            document.getElementById('loader').style.display = 'flex'; // Display the loader
+        }
+
+        
+        function hideLoader() {
+            document.getElementById('loader').style.display = 'none'; // Hide the loader
+        }
+
+        
+        showLoader();
+
+        
+        fetch('https://fakestoreapi.com/products')
+            .then(response => {
+                hideLoader();
+                return response.json();
+            })
+            .then(products => {
+                const productList = document.getElementById('product-list');
+
+                products.forEach(product => {
+                    const listItem = document.createElement('div');
+                    listItem.classList.add('product-list-item');
+
+                    const image = document.createElement('img');
+                    image.classList.add('product-image');
+                    image.src = product.image;
+                    image.alt = product.title;
+                    listItem.appendChild(image);
+
+                    const title = document.createElement('h3');
+                    title.classList.add('product-title');
+                    title.textContent = product.title;
+                    listItem.appendChild(title);
+
+                    const price = document.createElement('div');
+                    price.classList.add('product-price');
+                    price.textContent = `$${product.price}`;
+                    listItem.appendChild(price);
+
+                    const discount = document.createElement('div');
+                    discount.classList.add('product-discount');
+                    discount.textContent = `${getRandomDiscount()}% off`; 
+                    listItem.appendChild(discount);
+
+                    // Calculate discounted price
+                    const discountedPrice = product.price * (1 - getRandomDiscount() / 100);
+                    const finalPrice = document.createElement('div');
+                    finalPrice.classList.add('product-final-price');
+                    finalPrice.textContent = `$${discountedPrice.toFixed(2)}`; 
+                    listItem.appendChild(finalPrice);
+
+                    // Add a click event listener to navigate to the product details page
+                    listItem.addEventListener('click', () => {
+                        // Redirect to the product details page with the product ID as a query parameter
+                        window.location.href = `product.html?id=${product.id}`;
+                    });
+
+                    productList.appendChild(listItem);
+                });
+            })
+            .catch(error => {
+                hideLoader();
+                console.log('Error:', error);
+            });
+
+        // Function to navigate to the cart page
+        function goToCart() {
+            window.location.href = "cart.html";
+        }
+
+        
+        function sortProducts() {
+            const sortByPrice = document.getElementById('sort-by-price').value;
+
+            fetch('https://fakestoreapi.com/products')
+                .then(response => response.json())
+                .then(products => {
+                    products.sort((a, b) => {
+                        if (sortByPrice === 'asc') {
+                            return a.price - b.price;
+                        } else {
+                            return b.price - a.price;
+                        }
+                    });
+
+                    const productList = document.getElementById('product-list');
+                    productList.innerHTML = '';
+
+                    products.forEach(product => {
+                        const listItem = document.createElement('div');
+                        listItem.classList.add('product-list-item');
+
+                        const image = document.createElement('img');
+                        image.classList.add('product-image');
+                        image.src = product.image;
+                        image.alt = product.title;
+                        listItem.appendChild(image);
+
+                        const title = document.createElement('h3');
+                        title.classList.add('product-title');
+                        title.textContent = product.title;
+                        listItem.appendChild(title);
+
+                        const price = document.createElement('div');
+                        price.classList.add('product-price');
+                        price.textContent = `$${product.price}`;
+                        listItem.appendChild(price);
+
+                        const discount = document.createElement('div');
+                        discount.classList.add('product-discount');
+                        discount.textContent = `${getRandomDiscount()}% off`; // Random discount
+                        listItem.appendChild(discount);
+
+                        // Calculate discounted price
+                        const discountedPrice = product.price * (1 - getRandomDiscount() / 100);
+                        const finalPrice = document.createElement('div');
+                        finalPrice.classList.add('product-final-price');
+                        finalPrice.textContent = `$${discountedPrice.toFixed(2)}`; // Set to two decimal places
+                        listItem.appendChild(finalPrice);
+
+                        // Add a click event listener to navigate to the product details page
+                        listItem.addEventListener('click', () => {
+                            // Redirect to the product details page with the product ID as a query parameter
+                            window.location.href = `product.html?id=${product.id}`;
+                        });
+
+                        productList.appendChild(listItem);
+                    });
+                })
+                .catch(error => {
+                    console.log('Error:', error);
+                });
+        }
+
+        
+        function getRandomDiscount() {
+            return Math.floor(Math.random() * 20) + 1; 
+        }
+
+        function updateCartCount() {
+            const cartCount = document.getElementById('cart-count');
+            const cartItems = JSON.parse(localStorage.getItem('cartItems'));
+            if (cartItems) {
+                cartCount.textContent = cartItems.length;
+            } else {
+                cartCount.textContent = '0';
+            }
+        }
+
+        updateCartCount();
+    </script>
+</body>
+
+</html>
